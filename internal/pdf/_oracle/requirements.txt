@@ -1,0 +1,11 @@
+# Lo que necesitan los oráculos de pdf-merge (all.ps1 y sus guiones) y los PDF
+# de prueba de scripts/fixtures.ps1, con las versiones con que se verificaron:
+# qpdf (vía pikepdf), pypdf y PDFium (vía pypdfium2) son los tres lectores
+# independientes; reportlab arma los PDF de prueba.
+#   python -m pip install -r internal/pdf/_oracle/requirements.txt
+numpy==2.2.6
+pikepdf==10.13.0.post1
+pillow==12.3.0
+pypdf==6.19.0
+pypdfium2==5.13.0
+reportlab==5.0.1
