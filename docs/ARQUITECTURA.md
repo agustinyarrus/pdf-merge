@@ -103,7 +103,7 @@
 
 ### win/desk
 
-- El modo y el tamaño de la consola por `syscall`, con las DLL que no son KnownDLL cargadas por ruta absoluta de System32 y `//go:uintptrescapes` en el envoltorio de las llamadas.
+- El modo y el tamaño de la consola por `syscall`, con `//go:uintptrescapes` en el envoltorio de las llamadas. Solo carga `kernel32.dll`, una KnownDLL que Windows toma siempre de System32 (con otra DLL nombrada sin ruta, `LoadLibrary` buscaría primero junto al exe).
 - Es chico a propósito: un test (`internal/tui/deps_test.go`) comprueba con `go list -deps` que ni `tui` ni el exe cargan `net`, `net/netip` u `os/exec`.
 
 ### version
