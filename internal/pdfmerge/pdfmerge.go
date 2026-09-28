@@ -148,7 +148,7 @@ func Main(t *tui.Term, version string, args []string) int {
 		res.Warnings = append(res.Warnings, fmt.Sprintf("%s tenía restricciones del propietario (imprimir, copiar, editar); la salida no las conserva", tui.Count(int64(restringidos), "archivo", "archivos")))
 	}
 	for _, w := range res.Warnings {
-		t.Line(t.Status(tui.Warn, w, ""))
+		t.Lines(aviso(t, w))
 	}
 	if len(res.Warnings) > 0 {
 		t.Blank()
@@ -333,7 +333,7 @@ func tarjeta(t *tui.Term, leidos []leido, res pdf.MergeResult, dd pdf.DedupeStat
 	if dd.Merged > 0 {
 		items = append(items, tui.Item{
 			Label: "Repetidos fusionados",
-			Value: fmt.Sprintf("%s · −%s", tui.Count(int64(dd.Merged), "objeto", "objetos"), tui.Bytes(dd.BytesSaved)),
+			Value: repetidos(dd),
 			Dot:   tui.Cream,
 		})
 	}
@@ -358,4 +358,33 @@ func fallo(t *tui.Term, err error) int {
 	t.Line(t.Paint(tui.Rose, "✗ ") + t.Paint(tui.Text, err.Error()))
 	t.Blank()
 	return cli.ExitFailure
+}
+
+// repetidos es el valor de "Repetidos fusionados": cuántos objetos y cuánto
+// se ahorró. Los objetos sin stream (un diccionario de fuente, un recurso
+// compartido) no suman bytes de stream: si solo se fusionaron de esos, van
+// los objetos solos y no un "−0 B".
+func repetidos(dd pdf.DedupeStats) string {
+	s := tui.Count(int64(dd.Merged), "objeto", "objetos")
+	if dd.BytesSaved > 0 {
+		s += " · −" + tui.Bytes(dd.BytesSaved)
+	}
+	return s
+}
+
+// aviso arma las líneas de un aviso al pie ("! …"), partido en palabras al
+// ancho de la ventana: si no, la consola lo corta en mitad de una palabra.
+// Las líneas de más quedan alineadas después del "!". A un pipe o a un
+// archivo sin ancho, el aviso va entero en una línea.
+func aviso(t *tui.Term, w string) []string {
+	sangria := strings.Repeat(" ", tui.Width(tui.Margin+t.Status(tui.Warn, "", "")))
+	partes := []string{w}
+	if t.Bounded() {
+		partes = tui.Wrap(w, t.Width()-len(sangria)-len(tui.Margin))
+	}
+	out := []string{tui.Margin + t.Status(tui.Warn, partes[0], "")}
+	for _, p := range partes[1:] {
+		out = append(out, sangria+t.Paint(tui.Text, p))
+	}
+	return out
 }
