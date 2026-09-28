@@ -1,6 +1,6 @@
 # pdf-merge 1.0.0
 
-La primera versión de pdf-merge como proyecto propio. Antes vivía en navaja, la suite de herramientas de consola para Windows; el código es el que se probó ahí (más un cambio de presentación: la cabecera dice la versión con su `v`), ahora con su repo, su número de versión, su CI y su demo.
+La primera versión de pdf-merge como proyecto propio. Antes vivía en navaja, la suite de herramientas de consola para Windows; el código es el que se probó ahí (más tres cambios de presentación, cada uno con su prueba: la cabecera dice la versión con su `v`; los errores y los avisos que no entran en la ventana se parten en palabras en vez de cortarse donde caen; y si lo fusionado son solo objetos sin stream, la tarjeta dice los objetos y no "−0 B"), ahora con su repo, su número de versión, su CI y su demo.
 
 pdf-merge es para juntar PDF sin subirlos a un sitio de "combinar PDF gratis": un contrato con su anexo, las facturas del mes en un solo archivo, las páginas impares de un escaneo. Desde la consola, en el orden que le digas y con las páginas que elijas.
 
@@ -16,7 +16,7 @@ pdf-merge es para juntar PDF sin subirlos a un sitio de "combinar PDF gratis": u
 
 **Marcadores, enlaces y formularios.** Un marcador por archivo con los originales anidados adentro, apuntando a las páginas nuevas (`--bookmarks auto|files|keep|none`). Los destinos con nombre se resuelven, así no chocan entre archivos, y un enlace a una página que quedó afuera queda inerte, no roto. Los campos de formulario siguen siendo rellenables; si dos archivos tienen un campo con el mismo nombre, se renombra (`fecha` y `fecha_2`) para que no compartan valor.
 
-**Cifrado.** RC4 de 40 y 128 bits, AES-128 y AES-256. Prueba primero la contraseña vacía (los PDF "protegidos" que se abren sin pedir nada) y después las de `--password`, como de usuario o de propietario. La salida no va cifrada, y lo avisa.
+**Cifrado.** RC4 de 40 y 128 bits, AES-128 y AES-256. Prueba primero la contraseña vacía (los PDF "protegidos" que se abren sin pedir nada) y después las de `--password`, como de usuario o de propietario. La salida no va cifrada: cada archivo descifrado sale marcado así y, si tenía restricciones del propietario, un aviso dice que no pasan a la salida.
 
 **No pisa nada.** La salida se escribe de forma atómica y no se sobrescribe sin `--force`; si pisaría una de las entradas, frena antes de leer. Códigos de salida: `0` todo bien, `1` se combinó salteando PDF ilegibles (`--skip-errors`), `2` línea de comandos inválida, `3` no se pudo combinar, `130` cancelado.
 
@@ -41,7 +41,7 @@ En Git Bash o WSL, `sha256sum -c SHA256SUMS`. El `.exe` es reproducible: la mism
 - pdf-merge no se contrasta consigo misma: cada PDF combinado pasa por tres lectores independientes. qpdf (estructura estricta), pypdf (páginas y texto en orden) y PDFium, el motor de Chrome (cada página renderizada y comparada píxel a píxel con su original).
 - Con los casos armados: rangos, reverso y object streams con 0 píxeles distintos; marcadores y enlaces, 6 de 6; cifrado de la revisión 2 a la 6, 13 de 13; formularios, cada campo con su valor y nombres únicos. Con un corpus de 56 PDF reales (Chrome, iTextSharp, SAP NetWeaver, reportlab…), 56 de 56.
 - Los oráculos encontraron seis defectos que las pruebas internas no veían, entre ellos números reales redondeados que achicaban la negrita de Chrome y contraseñas en PDFDocEncoding.
-- 58 pruebas de Go, todas corriendo: las de `pdf` leen PDF de prueba generados.
+- 61 pruebas de Go, todas corriendo: las de `pdf` leen PDF de prueba generados.
 - CI en `windows-latest` con el Go mínimo del `go.mod`: formato, `go vet` (también para Linux), todas las pruebas sin salteadas, el oráculo triple sobre los casos armados y el `.exe` con su versión y su SHA256.
 
 El detalle, en [docs/VERIFICACION.md](https://github.com/agustinyarrus/pdf-merge/blob/v1.0.0/docs/VERIFICACION.md); la arquitectura y los algoritmos, en [docs/ARQUITECTURA.md](https://github.com/agustinyarrus/pdf-merge/blob/v1.0.0/docs/ARQUITECTURA.md).

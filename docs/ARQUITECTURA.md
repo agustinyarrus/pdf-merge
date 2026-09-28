@@ -16,7 +16,7 @@
 4. `validarSalida` frena antes de leer si la salida pisaría una entrada o un archivo existente.
 5. `batch.Run` lee y valida los PDF en paralelo (una lectura por CPU, o `--jobs`), probando las contraseñas en cada uno. Si alguno falla, no se combina nada, salvo con `--skip-errors`.
 6. `pdf.Merge` combina en el orden de los argumentos; la deduplicación y la escritura van detrás.
-7. La tarjeta final cuenta archivos, páginas, bytes de entrada y salida, lo que se fusionó, marcadores, campos y el tiempo, y abajo van los avisos (restricciones del propietario que no se conservan, campos renombrados, firmas que dejan de validar, `/XFA` descartado).
+7. La tarjeta final cuenta archivos, páginas, bytes de entrada y salida, lo que se fusionó (los objetos y, si hubo streams, los bytes ahorrados), marcadores, campos y el tiempo, y abajo van los avisos, partidos al ancho de la ventana (restricciones del propietario que no se conservan, campos renombrados, firmas que dejan de validar, `/XFA` descartado).
 
 ## pdf: lectura
 
@@ -81,6 +81,7 @@
 
 - **Región viva**: el progreso se redibuja en el lugar a 20 cuadros por segundo y las líneas permanentes se imprimen por encima, con un orden de candados fijo para que no haya deadlock.
 - **Recorte seguro**: `ClipANSI` recorta una línea con escapes a N columnas visibles sin romper los colores.
+- **Renglones que no entran**: los errores (`✗`) y los avisos del pie (`!`) se parten en palabras al ancho de la ventana, con las líneas de más alineadas después de la marca (`Term.Marked`); a un pipe van enteros. Antes la consola los cortaba donde caían.
 - **Barra**: resolución de 1/8 de columna (bloques `▏▎▍▌▋▊▉█`) con degradé; en Windows Terminal el avance también se publica en el ícono y la pestaña (OSC 9;4).
 - **Tarjeta** sin bordes y **formato es-AR**: miles con punto, decimales con coma, bytes en unidades decimales.
 

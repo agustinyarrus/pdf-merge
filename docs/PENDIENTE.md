@@ -15,5 +15,5 @@ pdf-merge está terminada y verificada ([VERIFICACION.md](VERIFICACION.md)). Lo 
 
 ## Distribución
 
-- Releases en GitHub con el `pdf-merge.exe` que genera `build.ps1` y su SHA256.
-- Integración continua: `go vet` y `go test` en `windows-latest` con GitHub Actions; con Python en el runner, también `scripts\fixtures.ps1` y `all.ps1` sin corpus (no necesitan nada de la máquina).
+- Hecho: la CI ([`ci.yml`](../.github/workflows/ci.yml)) corre en cada push todas las pruebas, con los PDF de prueba, y `all.ps1` sin corpus; la release 1.0.0 está lista para publicar ([RELEASE.md](RELEASE.md)).
+- Falta: publicarla, y ver la primera corrida de la CI en GitHub (se simuló en la PC, no corrió en un runner de verdad).
