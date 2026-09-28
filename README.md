@@ -103,6 +103,8 @@ pdf-merge protegido.pdf anexo.pdf --password clave    # un PDF que pide contrase
 
 La selección va pegada a cada archivo, después de una `@`: `1-3,5`, `8-`, `impares`, `pares`, `reverso`. Un archivo que se llama `factura@2026.pdf` se toma entero, no como selección.
 
+El PDF sale en el orden de los argumentos (lo de una carpeta o un patrón, en orden natural). Los archivos se leen en paralelo y cada uno se tilda cuando termina, así que la lista de la consola puede salir en otro orden: en la demo, el escaneo de 43 MB queda último.
+
 | Flag | Qué hace |
 |---|---|
 | `-o`, `--out ARCHIVO` | el PDF de salida (`merged.pdf`) |
