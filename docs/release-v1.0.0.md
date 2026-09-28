@@ -42,7 +42,7 @@ En Git Bash o WSL, `sha256sum -c SHA256SUMS`. El `.exe` es reproducible: la mism
 - Con los casos armados: rangos, reverso y object streams con 0 píxeles distintos; marcadores y enlaces, 6 de 6; cifrado de la revisión 2 a la 6, 13 de 13; formularios, cada campo con su valor y nombres únicos. Con un corpus de 56 PDF reales (Chrome, iTextSharp, SAP NetWeaver, reportlab…), 56 de 56.
 - Los oráculos encontraron seis defectos que las pruebas internas no veían, entre ellos números reales redondeados que achicaban la negrita de Chrome y contraseñas en PDFDocEncoding.
 - 61 pruebas de Go, todas corriendo: las de `pdf` leen PDF de prueba generados.
-- CI en `windows-latest` con el Go mínimo del `go.mod`: formato, `go vet` (también para Linux), todas las pruebas sin salteadas, el oráculo triple sobre los casos armados y el `.exe` con su versión y su SHA256.
+- CI configurada para `windows-latest` con el Go mínimo del `go.mod`: formato, `go vet` (también para Linux), todas las pruebas sin salteadas, el oráculo triple sobre los casos armados y el `.exe` con su versión y su SHA256. Esta versión se verificó con la misma secuencia en un clon limpio, antes de publicarla.
 
 El detalle, en [docs/VERIFICACION.md](https://github.com/agustinyarrus/pdf-merge/blob/v1.0.0/docs/VERIFICACION.md); la arquitectura y los algoritmos, en [docs/ARQUITECTURA.md](https://github.com/agustinyarrus/pdf-merge/blob/v1.0.0/docs/ARQUITECTURA.md).
 
