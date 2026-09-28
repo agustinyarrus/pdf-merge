@@ -7,10 +7,16 @@ import (
 	"testing"
 )
 
+// fxDir es la carpeta de fixtures que genera scripts/fixtures.ps1:
+// PDF_FIXTURES si está definida, si no %TEMP%\pdf-merge-fx. Si no existe, el
+// test se saltea sin fallar para que la suite corra en cualquier máquina.
 func fxDir(t *testing.T) string {
-	dir := filepath.Join(os.TempDir(), "navaja-pdf")
+	dir := os.Getenv("PDF_FIXTURES")
+	if dir == "" {
+		dir = filepath.Join(os.TempDir(), "pdf-merge-fx")
+	}
 	if _, err := os.Stat(dir); err != nil {
-		t.Skipf("no hay fixtures de PDF en %s", dir)
+		t.Skipf("no hay fixtures de PDF en %s (generalos con scripts/fixtures.ps1)", dir)
 	}
 	return dir
 }

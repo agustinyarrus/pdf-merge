@@ -1,11 +1,21 @@
 ﻿# Regresión completa de pdf-merge contra oráculos externos (qpdf, pypdf, PDFium).
-# Uso: & all.ps1 [-Corpus lista.txt]   (lista de PDF reales, uno por línea)
-param([string] $Corpus = (Join-Path $env:TEMP 'navaja-sweep-list.txt'))
+# Uso: & all.ps1 [-Corpus lista.txt] [-Fx carpeta] [-Work carpeta]
+#   -Corpus  lista de PDF reales, una ruta por línea; sin ella se corren solo los casos armados
+#   -Fx      los fixtures de scripts\fixtures.ps1 (por defecto PDF_FIXTURES o %TEMP%\pdf-merge-fx)
+#   -Work    dónde van el exe y las salidas (por defecto %TEMP%\pdf-merge-oracle)
+param(
+    [string] $Corpus,
+    [string] $Fx = $(if ($env:PDF_FIXTURES) { $env:PDF_FIXTURES } else { Join-Path ([IO.Path]::GetTempPath()) 'pdf-merge-fx' }),
+    [string] $Work = (Join-Path ([IO.Path]::GetTempPath()) 'pdf-merge-oracle')
+)
 $ErrorActionPreference = 'Continue'
 $repo = Resolve-Path (Join-Path $PSScriptRoot '..\..\..')
 $oracle = $PSScriptRoot
-$fx = Join-Path $env:TEMP 'navaja-pdf'
-$exe = Join-Path $env:TEMP 'pdf-merge.exe'
+if (-not $Corpus) { $Corpus = Join-Path $Work 'corpus.txt' }
+if (-not (Test-Path (Join-Path $Fx 'a.pdf'))) { throw "no hay fixtures en $($Fx): correr antes .\scripts\fixtures.ps1" }
+New-Item -ItemType Directory -Force $Work | Out-Null
+$exe = Join-Path $Work 'pdf-merge.exe'
+$env:PDF_FIXTURES = $Fx   # los tests de Go leen los mismos fixtures
 
 # ESC como [char]27 y no `e: así corre también en Windows PowerShell 5.1.
 $e = [char]27
@@ -14,7 +24,7 @@ $sub = "$e[38;2;138;143;168m"; $lav = "$e[38;2;196;181;253m"; $bg = "$e[48;2;16;
 
 Push-Location $repo
 $env:CGO_ENABLED = '0'
-go build -ldflags="-s -w" -trimpath -o $exe ./cmd/pdf-merge
+go build -ldflags="-s -w" -trimpath -o $exe .
 if ($LASTEXITCODE -ne 0) { Pop-Location; throw 'no compila pdf-merge' }
 
 $etapas = [ordered]@{}
@@ -28,7 +38,7 @@ function Etapa([string] $nombre, [scriptblock] $cuerpo) {
 
 Etapa 'tests de Go (parser, merge, dedupe, Tarjan)' { go test ./internal/pdf/ 2>&1 | Select-Object -Last 1 }
 Etapa 'fixtures: rango, reverso, object streams' {
-    $out = Join-Path $env:TEMP 'navaja-merged.pdf'
+    $out = Join-Path $Work 'merged.pdf'
     & $exe "$fx\a.pdf" "$fx\c_objstm.pdf@2-4" "$fx\d.pdf" "$fx\b.pdf@reverso" -o $out --force --no-color | Out-Null
     python (Join-Path $oracle 'verify.py') $out "$fx\a.pdf:1,2,3" "$fx\c_objstm.pdf:2,3,4" "$fx\d.pdf:1,2" "$fx\b.pdf:2,1" 2>$null
 }
@@ -39,16 +49,16 @@ if (Test-Path $Corpus) {
     $forms = @(python (Join-Path $oracle 'list_forms.py') $Corpus 2>$null)
     if ($forms.Count -gt 0) {
         Etapa "formularios reales ($($forms.Count) PDF con AcroForm)" {
-            $out = Join-Path $env:TEMP 'navaja-forms.pdf'
+            $out = Join-Path $Work 'forms.pdf'
             & $exe @forms -o $out --force --no-color | Out-Null
             python (Join-Path $oracle 'form_check.py') $out @forms 2>$null
         }
     }
     Etapa "barrido de PDF reales ($((Get-Content $Corpus).Count))" {
-        python (Join-Path $oracle 'sweep.py') $exe (Join-Path $env:TEMP 'navaja-sweep') $Corpus 2>$null | Select-Object -Last 1
+        python (Join-Path $oracle 'sweep.py') $exe (Join-Path $Work 'sweep') $Corpus 2>$null | Select-Object -Last 1
     }
     Etapa 'estrés: todos en un solo PDF' {
-        python (Join-Path $oracle 'bigmerge.py') $exe $Corpus (Join-Path $env:TEMP 'navaja-big.pdf') 2>$null | Select-Object -First 1
+        python (Join-Path $oracle 'bigmerge.py') $exe $Corpus (Join-Path $Work 'big.pdf') 2>$null | Select-Object -First 1
     }
 }
 Pop-Location

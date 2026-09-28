@@ -46,7 +46,8 @@ type leido struct {
 	bytes    int64
 }
 
-// Main es el punto de entrada del subcomando.
+// Main es el punto de entrada de pdf-merge: interpreta args, hace el trabajo y
+// devuelve el código de salida.
 func Main(t *tui.Term, version string, args []string) int {
 	o := opciones{salida: "merged.pdf", marcadores: "auto"}
 	app := cli.New("pdf-merge", version, "combina varios PDF en uno, local")

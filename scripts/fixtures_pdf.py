@@ -1,4 +1,4 @@
-# Genera los PDF de prueba de la suite (los que leen internal/pdf y los oráculos):
+# Genera los PDF de prueba de pdf-merge (los que leen internal/pdf y los oráculos):
 #   a.pdf  3 páginas A4        b.pdf  2 páginas carta     c.pdf  5 páginas A4
 #   d.pdf  2 páginas, una con imagen (streams binarios y recursos)
 #   c_objstm.pdf  c.pdf reescrito con object streams y xref stream (PDF 1.5+)

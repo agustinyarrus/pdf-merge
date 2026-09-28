@@ -1,8 +1,7 @@
 // Package batch corre muchas tareas independientes en paralelo con una barra
 // de progreso viva: narra qué se está haciendo, tilda cada una al terminar y
-// deja el conteo a la vista. Lo comparten las herramientas que procesan varios
-// archivos (img, pdf-merge, vidsquash), para no reescribir el mismo pool y la
-// misma barra en cada una.
+// deja el conteo a la vista. pdf-merge lo usa para leer y validar varios PDF
+// a la vez sin reescribir el pool ni la barra.
 package batch
 
 import (

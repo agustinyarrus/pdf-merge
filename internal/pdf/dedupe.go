@@ -214,7 +214,7 @@ func selfLoop(adj [][]int, v int) bool {
 // uniqueDigest es un hash que ningún contenido puede producir (prefijo propio).
 func uniqueDigest(num int) digest {
 	var d digest
-	copy(d[:], "\x00navaja-identidad\x00")
+	copy(d[:], "\x00pdf-merge-identidad\x00")
 	binary.BigEndian.PutUint64(d[sha256.Size-8:], uint64(num))
 	return d
 }
