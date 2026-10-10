@@ -5,7 +5,6 @@ package pdfmerge
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -16,6 +15,7 @@ import (
 	"github.com/agustinyarrus/pdf-merge/internal/batch"
 	"github.com/agustinyarrus/pdf-merge/internal/cli"
 	"github.com/agustinyarrus/pdf-merge/internal/fsx"
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
 	"github.com/agustinyarrus/pdf-merge/internal/pdf"
 	"github.com/agustinyarrus/pdf-merge/internal/tui"
 )
@@ -49,35 +49,36 @@ type leido struct {
 // Main es el punto de entrada de pdf-merge: interpreta args, hace el trabajo y
 // devuelve el código de salida.
 func Main(t *tui.Term, version string, args []string) int {
+	cli.ResolveLang("pdf-merge", args) // el idioma, antes de escribir una sola palabra
 	o := opciones{salida: "merged.pdf", marcadores: "auto"}
-	app := cli.New("pdf-merge", version, "combina varios PDF en uno, local")
+	app := cli.New("pdf-merge", version, i18n.T("combina varios PDF en uno, local"))
 	app.Usage = []string{
-		"pdf-merge <archivo.pdf[@páginas]|carpeta|patrón>… [-o salida.pdf]",
-		"pdf-merge a.pdf b.pdf c.pdf -o todo.pdf",
-		"pdf-merge informe.pdf@1-3 anexo.pdf@5,8- -o recorte.pdf",
+		i18n.T("pdf-merge <archivo.pdf[@páginas]|carpeta|patrón>… [-o salida.pdf]"),
+		i18n.T("pdf-merge a.pdf b.pdf c.pdf -o todo.pdf"),
+		i18n.T("pdf-merge informe.pdf@1-3 anexo.pdf@5,8- -o recorte.pdf"),
 	}
-	app.Section("salida")
-	app.String(&o.salida, "out", 'o', "ARCHIVO", "PDF de salida")
-	app.Bool(&o.forzar, "force", 'f', "sobrescribir la salida si ya existe")
-	app.Bool(&o.sinDedupe, "no-dedupe", 0, "no fusionar imágenes y fuentes repetidas entre archivos")
-	app.Enum(&o.marcadores, "bookmarks", 'b', "marcadores: uno por archivo con los originales adentro (auto), solo por archivo (files), solo los originales (keep) o ninguno (none)", "auto", "files", "keep", "none")
-	app.Section("entrada")
-	app.Bool(&o.recursivo, "recursive", 'r', "entrar en subcarpetas al pasar una carpeta")
-	app.Bool(&o.saltarMal, "skip-errors", 0, "seguir sin los PDF que no se puedan leer (por defecto se aborta)")
-	app.Strings(&o.claves, "password", 'p', "CLAVE", "contraseña para abrir PDF cifrados (repetible; se prueba en cada uno)")
-	app.Int(&o.trabajos, "jobs", 'j', "N", "lecturas en paralelo (0 = una por CPU)", 0, 256)
+	app.Section(i18n.T("salida"))
+	app.String(&o.salida, "out", 'o', i18n.T("ARCHIVO"), i18n.T("PDF de salida"))
+	app.Bool(&o.forzar, "force", 'f', i18n.T("sobrescribir la salida si ya existe"))
+	app.Bool(&o.sinDedupe, "no-dedupe", 0, i18n.T("no fusionar imágenes y fuentes repetidas entre archivos"))
+	app.Enum(&o.marcadores, "bookmarks", 'b', i18n.T("marcadores: uno por archivo con los originales adentro (auto), solo por archivo (files), solo los originales (keep) o ninguno (none)"), "auto", "files", "keep", "none")
+	app.Section(i18n.T("entrada"))
+	app.Bool(&o.recursivo, "recursive", 'r', i18n.T("entrar en subcarpetas al pasar una carpeta"))
+	app.Bool(&o.saltarMal, "skip-errors", 0, i18n.T("seguir sin los PDF que no se puedan leer (por defecto se aborta)"))
+	app.Strings(&o.claves, "password", 'p', i18n.T("CLAVE"), i18n.T("contraseña para abrir PDF cifrados (repetible; se prueba en cada uno)"))
+	app.Int(&o.trabajos, "jobs", 'j', "N", i18n.T("lecturas en paralelo (0 = una por CPU)"), 0, 256)
 	app.Examples = []cli.Example{
-		{Cmd: "pdf-merge *.pdf -o todo.pdf", Desc: "todos los PDF de la carpeta, en orden natural"},
-		{Cmd: "pdf-merge contrato.pdf@1-2 firmas.pdf", Desc: "las dos primeras del contrato y después las firmas"},
-		{Cmd: "pdf-merge libro.pdf@impares -o impares.pdf", Desc: "también: pares, reverso, 8- (hasta el final)"},
-		{Cmd: "pdf-merge escaneos/ -o legajo.pdf", Desc: "una carpeta entera (orden natural: pag2 antes que pag10)"},
+		{Cmd: i18n.T("pdf-merge *.pdf -o todo.pdf"), Desc: i18n.T("todos los PDF de la carpeta, en orden natural")},
+		{Cmd: i18n.T("pdf-merge contrato.pdf@1-2 firmas.pdf"), Desc: i18n.T("las dos primeras del contrato y después las firmas")},
+		{Cmd: i18n.T("pdf-merge libro.pdf@impares -o impares.pdf"), Desc: i18n.T("también: pares, reverso, 8- (hasta el final)")},
+		{Cmd: i18n.T("pdf-merge escaneos/ -o legajo.pdf"), Desc: i18n.T("una carpeta entera (orden natural: pag2 antes que pag10)")},
 	}
 	app.Notes = []string{
-		"Las páginas se copian tal cual: no se recomprime ni se pierde calidad.",
-		"Las imágenes y fuentes idénticas se guardan una sola vez aunque vengan de archivos distintos (típico al juntar facturas o catálogos del mismo sistema).",
-		"Los enlaces internos se conservan cuando apuntan a páginas incluidas.",
-		"Los PDF cifrados que se abren sin contraseña (solo restricciones) se combinan directo; los que piden una, con --password. La salida no va cifrada.",
-		"Si un nombre de archivo tiene '@' (factura@2026.pdf) se toma entero, no como selección.",
+		i18n.T("Las páginas se copian tal cual: no se recomprime ni se pierde calidad."),
+		i18n.T("Las imágenes y fuentes idénticas se guardan una sola vez aunque vengan de archivos distintos (típico al juntar facturas o catálogos del mismo sistema)."),
+		i18n.T("Los enlaces internos se conservan cuando apuntan a páginas incluidas."),
+		i18n.T("Los PDF cifrados que se abren sin contraseña (solo restricciones) se combinan directo; los que piden una, con --password. La salida no va cifrada."),
+		i18n.T("Si un nombre de archivo tiene '@' (factura@2026.pdf) se toma entero, no como selección."),
 	}
 
 	pos, done, code := app.Start(t, args)
@@ -94,13 +95,13 @@ func Main(t *tui.Term, version string, args []string) int {
 		return fallo(t, err)
 	}
 
-	t.Lines(t.Header("pdf-merge", "combina varios PDF en uno, local", version))
+	t.Lines(t.Header("pdf-merge", i18n.T("combina varios PDF en uno, local"), version))
 	for _, p := range problemas {
 		t.Line(t.Status(tui.Warn, fsx.Display(p.Pattern), p.Err.Error()))
 	}
 	if len(entradas) == 0 {
 		t.Blank()
-		t.Line(t.Status(tui.Fail, "No hay PDF para combinar", "revisá los nombres o los patrones"))
+		t.Line(t.Status(tui.Fail, i18n.T("No hay PDF para combinar"), i18n.T("revisá los nombres o los patrones")))
 		return cli.ExitFailure
 	}
 	if err := validarSalida(o, entradas); err != nil {
@@ -112,11 +113,11 @@ func Main(t *tui.Term, version string, args []string) int {
 	inicio := time.Now()
 
 	t.Lines([]string{"", t.Chips(
-		tui.Chip{Text: tui.Count(int64(len(entradas)), "archivo", "archivos"), Dot: tui.Teal},
-		tui.Chip{Text: "salida " + fsx.Display(o.salida), Dot: tui.Lavender},
+		tui.Chip{Text: i18n.Nf(len(entradas), "%s archivo", "%s archivos", tui.Int(int64(len(entradas)))), Dot: tui.Teal},
+		tui.Chip{Text: i18n.F("salida %s", fsx.Display(o.salida)), Dot: tui.Lavender},
 	), ""})
 
-	resultados := batch.Run(ctx, t, tareasDeLectura(entradas, o.claves), batch.Options{Title: "Leyendo PDF", Workers: o.trabajos})
+	resultados := batch.Run(ctx, t, tareasDeLectura(entradas, o.claves), batch.Options{Title: i18n.T("Leyendo PDF"), Workers: o.trabajos})
 	if ctx.Err() != nil {
 		return cli.ExitInterrupted
 	}
@@ -124,11 +125,12 @@ func Main(t *tui.Term, version string, args []string) int {
 	sources, leidos, fallidos := juntar(resultados)
 	if fallidos > 0 && !o.saltarMal {
 		t.Blank()
-		t.Line(t.Status(tui.Fail, "No se combinó nada", fmt.Sprintf("%s con error (usá --skip-errors para seguir sin ellos)", tui.Count(int64(fallidos), "archivo", "archivos"))))
+		t.Line(t.Status(tui.Fail, i18n.T("No se combinó nada"), i18n.Nf(fallidos, "%s archivo con error (usá --skip-errors para seguir sin él)",
+			"%s archivos con error (usá --skip-errors para seguir sin ellos)", tui.Int(int64(fallidos)))))
 		return cli.ExitFailure
 	}
 	if len(sources) == 0 {
-		return fallo(t, errors.New("ningún PDF se pudo leer"))
+		return fallo(t, i18n.Errorf("ningún PDF se pudo leer"))
 	}
 
 	modo, _ := pdf.ParseBookmarkMode(o.marcadores) // ya validado por el Enum
@@ -145,7 +147,10 @@ func Main(t *tui.Term, version string, args []string) int {
 		}
 	}
 	if restringidos > 0 {
-		res.Warnings = append(res.Warnings, fmt.Sprintf("%s tenía restricciones del propietario (imprimir, copiar, editar); la salida no las conserva", tui.Count(int64(restringidos), "archivo", "archivos")))
+		res.Warnings = append(res.Warnings, i18n.Nf(restringidos,
+			"%s archivo tenía restricciones del propietario (imprimir, copiar, editar); la salida no las conserva",
+			"%s archivos tenían restricciones del propietario (imprimir, copiar, editar); la salida no las conserva",
+			tui.Int(int64(restringidos))))
 	}
 	for _, w := range res.Warnings {
 		t.Lines(aviso(t, w))
@@ -185,15 +190,15 @@ func resolverEntradas(pos []string, o opciones) ([]entrada, []fsx.Problem, error
 // archivo existente sin --force.
 func validarSalida(o opciones, entradas []entrada) error {
 	if !strings.EqualFold(filepath.Ext(o.salida), ".pdf") {
-		return fmt.Errorf("la salida tiene que terminar en .pdf (vino %q)", o.salida)
+		return i18n.Errorf("la salida tiene que terminar en .pdf (vino %q)", o.salida)
 	}
 	for _, e := range entradas {
 		if fsx.SameFile(e.path, o.salida) {
-			return fmt.Errorf("la salida %s es también una de las entradas: elegí otro nombre con -o", fsx.Display(o.salida))
+			return i18n.Errorf("la salida %s es también una de las entradas: elegí otro nombre con -o", fsx.Display(o.salida))
 		}
 	}
 	if !o.forzar && fsx.Exists(o.salida) {
-		return fmt.Errorf("%s ya existe (usá --force para sobrescribirlo)", fsx.Display(o.salida))
+		return i18n.Errorf("%s ya existe (usá --force para sobrescribirlo)", fsx.Display(o.salida))
 	}
 	return nil
 }
@@ -214,12 +219,12 @@ func tareasDeLectura(entradas []entrada, claves []string) []batch.Task {
 				if err != nil {
 					return batch.Fail, explicar(err), nil, err
 				}
-				det := fmt.Sprintf("%s · %s", tui.Count(int64(l.elegidas), "página", "páginas"), tui.Bytes(l.bytes))
+				det := i18n.Nf(l.elegidas, "%s página · %s", "%s páginas · %s", tui.Int(int64(l.elegidas)), tui.Bytes(l.bytes))
 				if l.elegidas != l.total {
-					det = fmt.Sprintf("%d de %d páginas · %s", l.elegidas, l.total, tui.Bytes(l.bytes))
+					det = i18n.F("%d de %d páginas · %s", l.elegidas, l.total, tui.Bytes(l.bytes))
 				}
 				if l.source.Doc.Encrypted() {
-					det += " · descifrado"
+					det += " · " + i18n.T("descifrado")
 				}
 				return batch.OK, det, l, nil
 			},
@@ -248,7 +253,7 @@ func leer(e entrada, claves []string) (leido, error) {
 		}
 	}
 	if len(sel) == 0 {
-		return leido{}, errors.New("la selección no deja ninguna página")
+		return leido{}, i18n.Errorf("la selección no deja ninguna página")
 	}
 	titulo := strings.TrimSuffix(filepath.Base(e.path), filepath.Ext(e.path))
 	return leido{
@@ -263,9 +268,9 @@ func leer(e entrada, claves []string) (leido, error) {
 func explicar(err error) string {
 	switch {
 	case errors.Is(err, pdf.ErrPassword):
-		return "pide contraseña para abrirse: pasala con --password"
+		return i18n.T("pide contraseña para abrirse: pasala con --password")
 	case errors.Is(err, os.ErrNotExist):
-		return "no existe"
+		return i18n.T("no existe")
 	}
 	return err.Error()
 }
@@ -291,7 +296,7 @@ func juntar(resultados []batch.Result) ([]pdf.Source, []leido, int) {
 // que narra la etapa en curso.
 func escribir(t *tui.Term, salida string, sources []pdf.Source, opts pdf.MergeOptions, dedupe bool) (pdf.MergeResult, pdf.DedupeStats, int64, error) {
 	var etapa atomic.Value
-	etapa.Store("Combinando páginas…")
+	etapa.Store(i18n.T("Combinando páginas…"))
 	live := t.StartLive(func(width int) []string {
 		return []string{tui.Margin + t.Paint(tui.Lavender, tui.Spinner(time.Now())+" "+etapa.Load().(string))}
 	})
@@ -306,12 +311,12 @@ func escribir(t *tui.Term, salida string, sources []pdf.Source, opts pdf.MergeOp
 		}
 		res = r
 		if dedupe {
-			etapa.Store("Buscando imágenes y fuentes repetidas…")
+			etapa.Store(i18n.T("Buscando imágenes y fuentes repetidas…"))
 			dd = out.Dedupe() // incluye la recolección de lo inalcanzable
 		} else {
 			out.Collect()
 		}
-		etapa.Store("Escribiendo…")
+		etapa.Store(i18n.T("Escribiendo…"))
 		n, err = out.WriteTo(w)
 		return err
 	})
@@ -325,30 +330,30 @@ func tarjeta(t *tui.Term, leidos []leido, res pdf.MergeResult, dd pdf.DedupeStat
 		bytesIn += l.bytes
 	}
 	items := []tui.Item{
-		{Label: "Archivos", Value: tui.Int(int64(len(leidos))), Dot: tui.Teal},
-		{Label: "Páginas", Value: tui.Int(int64(res.TotalPages)), Dot: tui.Lavender},
-		{Label: "Entrada", Value: tui.Bytes(bytesIn), Dot: tui.Sky},
-		{Label: "Salida", Value: tui.Bytes(bytesOut), Dot: tui.Peach},
+		{Label: i18n.T("Archivos"), Value: tui.Int(int64(len(leidos))), Dot: tui.Teal},
+		{Label: i18n.T("Páginas"), Value: tui.Int(int64(res.TotalPages)), Dot: tui.Lavender},
+		{Label: i18n.T("Entrada"), Value: tui.Bytes(bytesIn), Dot: tui.Sky},
+		{Label: i18n.T("Salida"), Value: tui.Bytes(bytesOut), Dot: tui.Peach},
 	}
 	if dd.Merged > 0 {
 		items = append(items, tui.Item{
-			Label: "Repetidos fusionados",
+			Label: i18n.T("Repetidos fusionados"),
 			Value: repetidos(dd),
 			Dot:   tui.Cream,
 		})
 	}
 	if res.Bookmarks > 0 {
-		items = append(items, tui.Item{Label: "Marcadores", Value: tui.Int(int64(res.Bookmarks)), Dot: tui.Sky})
+		items = append(items, tui.Item{Label: i18n.T("Marcadores"), Value: tui.Int(int64(res.Bookmarks)), Dot: tui.Sky})
 	}
 	if res.FormFields > 0 {
-		items = append(items, tui.Item{Label: "Campos de formulario", Value: tui.Int(int64(res.FormFields)), Dot: tui.Lavender})
+		items = append(items, tui.Item{Label: i18n.T("Campos de formulario"), Value: tui.Int(int64(res.FormFields)), Dot: tui.Lavender})
 	}
 	items = append(items,
-		tui.Item{Label: "Archivo", Value: fsx.Display(salida), Dot: tui.Sage},
-		tui.Item{Label: "Tiempo", Value: tui.Duration(d), Dot: tui.Pink},
+		tui.Item{Label: i18n.T("Archivo"), Value: fsx.Display(salida), Dot: tui.Sage},
+		tui.Item{Label: i18n.T("Tiempo"), Value: tui.Duration(d), Dot: tui.Pink},
 	)
 	if fallidos > 0 {
-		items = append(items, tui.Item{Label: "Omitidos", Value: tui.Int(int64(fallidos)), Dot: tui.Rose})
+		items = append(items, tui.Item{Label: i18n.T("Omitidos"), Value: tui.Int(int64(fallidos)), Dot: tui.Rose})
 	}
 	return t.Card("pdf-merge", items)
 }
@@ -365,7 +370,7 @@ func fallo(t *tui.Term, err error) int {
 // compartido) no suman bytes de stream: si solo se fusionaron de esos, van
 // los objetos solos y no un "−0 B".
 func repetidos(dd pdf.DedupeStats) string {
-	s := tui.Count(int64(dd.Merged), "objeto", "objetos")
+	s := i18n.Nf(dd.Merged, "%s objeto", "%s objetos", tui.Int(int64(dd.Merged)))
 	if dd.BytesSaved > 0 {
 		s += " · −" + tui.Bytes(dd.BytesSaved)
 	}

@@ -1,8 +1,9 @@
 package pdf
 
 import (
-	"fmt"
 	"io"
+
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
 )
 
 // merge.go combina varios PDF en uno. Por cada página se copia el cierre
@@ -84,7 +85,7 @@ func Merge(out *Builder, sources []Source, opts MergeOptions) (MergeResult, erro
 		if !ok {
 			var err error
 			if c, err = newCopier(src.Doc, out); err != nil {
-				return MergeResult{}, fmt.Errorf("archivo %d: %w", si+1, err)
+				return MergeResult{}, i18n.Errorf("archivo %d: %w", si+1, err)
 			}
 			copiers[src.Doc] = c
 		}
@@ -114,7 +115,7 @@ func Merge(out *Builder, sources []Source, opts MergeOptions) (MergeResult, erro
 			}
 			copied, err := p.c.copyValue(v)
 			if err != nil {
-				return MergeResult{}, fmt.Errorf("archivo %d: %w", p.src+1, err)
+				return MergeResult{}, i18n.Errorf("archivo %d: %w", p.src+1, err)
 			}
 			newPage[k] = copied
 		}
@@ -193,7 +194,7 @@ func buildOutline(sources []Source, copiers map[*Document]*copier, firstPage []p
 		}
 		title := src.Title
 		if title == "" {
-			title = fmt.Sprintf("Archivo %d", si+1)
+			title = i18n.F("Archivo %d", si+1)
 		}
 		items = append(items, &outlineItem{
 			title: textString(title),
@@ -358,17 +359,17 @@ func MergeFiles(inputs [][]byte, ranges []*PageRange, w io.Writer) (MergeResult,
 	for i, raw := range inputs {
 		doc, err := Parse(raw)
 		if err != nil {
-			return MergeResult{}, fmt.Errorf("archivo %d: %w", i+1, err)
+			return MergeResult{}, i18n.Errorf("archivo %d: %w", i+1, err)
 		}
 		all, err := doc.Pages()
 		if err != nil {
-			return MergeResult{}, fmt.Errorf("archivo %d: %w", i+1, err)
+			return MergeResult{}, i18n.Errorf("archivo %d: %w", i+1, err)
 		}
 		sel := all
 		if i < len(ranges) && ranges[i] != nil {
 			sel, err = ranges[i].Select(all)
 			if err != nil {
-				return MergeResult{}, fmt.Errorf("archivo %d: %w", i+1, err)
+				return MergeResult{}, i18n.Errorf("archivo %d: %w", i+1, err)
 			}
 		}
 		sources = append(sources, Source{Doc: doc, Pages: sel})

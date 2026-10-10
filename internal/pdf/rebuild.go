@@ -2,9 +2,10 @@ package pdf
 
 import (
 	"bytes"
-	"fmt"
 	"regexp"
 	"strconv"
+
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
 )
 
 // rebuild.go es la red de seguridad: si el xref está roto, corrido o falta, se
@@ -21,7 +22,7 @@ var objHeader = regexp.MustCompile(`(?m)(?:^|[\s>])(\d+)\s+(\d+)\s+obj\b`)
 func (d *Document) rebuildXref() error {
 	matches := objHeader.FindAllSubmatchIndex(d.raw, -1)
 	if len(matches) == 0 {
-		return fmt.Errorf("no encontré objetos para reconstruir el xref")
+		return i18n.Errorf("no encontré objetos para reconstruir el xref")
 	}
 	d.xref = map[int]xrefEntry{}
 	d.objStm = map[int]*objectStream{}
@@ -97,7 +98,7 @@ func (d *Document) rebuildTrailer() error {
 		d.trailer = Dict{Name("Root"): Ref{Num: num, Gen: 0}}
 		return nil
 	}
-	return fmt.Errorf("no encontré el catálogo del documento (/Type /Catalog)")
+	return i18n.Errorf("no encontré el catálogo del documento (/Type /Catalog)")
 }
 
 // tryTrailer adopta tr como trailer si lleva a un catálogo válido.

@@ -3,6 +3,8 @@ package pdf
 import (
 	"bytes"
 	"fmt"
+
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
 )
 
 // acroform.go arma el formulario (/AcroForm) del documento combinado. Los
@@ -73,7 +75,9 @@ func mergeAcroForms(out *Builder, sources []Source, copiers map[*Document]*copie
 	var warnings []string
 	renamed := renameConflictingRoots(out, roots, rootOrigin(out, roots, copiers))
 	if renamed > 0 {
-		warnings = append(warnings, fmt.Sprintf("%s de formulario se renombraron para que no se mezclen entre archivos (sufijo _2, _3…)", countNoun(renamed, "campo", "campos")))
+		warnings = append(warnings, i18n.Nf(renamed,
+			"%d campo de formulario se renombró para que no se mezcle entre archivos (sufijo _2, _3…)",
+			"%d campos de formulario se renombraron para que no se mezclen entre archivos (sufijo _2, _3…)", renamed))
 	}
 
 	af := Dict{}
@@ -108,7 +112,7 @@ func mergeAcroForms(out *Builder, sources []Source, copiers map[*Document]*copie
 		}
 		mergeDR(dr, srcAF[Name("DR")], c)
 		if srcAF[Name("XFA")] != nil {
-			warnings = append(warnings, fmt.Sprintf("el archivo %d tenía un formulario XFA: se conserva su versión AcroForm", si+1))
+			warnings = append(warnings, i18n.F("el archivo %d tenía un formulario XFA: se conserva su versión AcroForm", si+1))
 		}
 	}
 	if len(dr) > 0 {
@@ -121,7 +125,7 @@ func mergeAcroForms(out *Builder, sources []Source, copiers map[*Document]*copie
 		// Los campos de firma siguen ahí, pero el documento cambió: la firma
 		// ya no valida, y "solo agregar" deja de tener sentido.
 		af[Name("SigFlags")] = Integer(sigFlagSignaturesExist)
-		warnings = append(warnings, "había firmas digitales: el documento combinado es otro archivo, así que esas firmas dejan de validar (se ven, pero no certifican)")
+		warnings = append(warnings, i18n.T("había firmas digitales: el documento combinado es otro archivo, así que esas firmas dejan de validar (se ven, pero no certifican)"))
 	}
 	return af, warnings
 }
@@ -249,11 +253,4 @@ func (d *Document) acroForm() Dict {
 	}
 	af, _ := d.resolveDict(root[Name("AcroForm")])
 	return af
-}
-
-func countNoun(n int, one, many string) string {
-	if n == 1 {
-		return fmt.Sprintf("1 %s", one)
-	}
-	return fmt.Sprintf("%d %s", n, many)
 }

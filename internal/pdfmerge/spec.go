@@ -1,10 +1,10 @@
 package pdfmerge
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
 	"github.com/agustinyarrus/pdf-merge/internal/pdf"
 )
 
@@ -39,7 +39,7 @@ func parseSpec(arg string) (inputSpec, error) {
 	}
 	if !strings.HasSuffix(strings.ToLower(pattern), ".pdf") && !strings.ContainsAny(pattern, "*?[") {
 		if st, err := os.Stat(pattern); err != nil || st.IsDir() {
-			return inputSpec{}, fmt.Errorf("%q: la selección de páginas va pegada a un .pdf (ej.: informe.pdf@1-3)", arg)
+			return inputSpec{}, i18n.Errorf("%q: la selección de páginas va pegada a un .pdf (ej.: informe.pdf@1-3)", arg)
 		}
 	}
 	return inputSpec{pattern: pattern, pages: pr, raw: sel}, nil

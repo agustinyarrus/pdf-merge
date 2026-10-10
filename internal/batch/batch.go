@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
 	"github.com/agustinyarrus/pdf-merge/internal/tui"
 )
 
@@ -136,7 +137,7 @@ func Run(ctx context.Context, t *tui.Term, tasks []Task, opt Options) []Result {
 func runSafely(ctx context.Context, task Task) (status Status, detail string, data any, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			status, detail, data, err = Fail, "error interno procesando el archivo", nil, errPanic(r)
+			status, detail, data, err = Fail, i18n.T("error interno procesando el archivo"), nil, errPanic(r)
 		}
 	}()
 	return task.Run(ctx)

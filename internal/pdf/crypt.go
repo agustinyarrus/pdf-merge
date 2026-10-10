@@ -9,8 +9,8 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/binary"
-	"errors"
-	"fmt"
+
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
 )
 
 // crypt.go implementa el manejador de seguridad estándar del PDF (/Filter
@@ -26,7 +26,7 @@ import (
 // /EncryptMetadata es false.
 
 // ErrPassword se devuelve cuando el PDF pide una contraseña que no tenemos.
-var ErrPassword = errors.New("el PDF pide contraseña para abrirse")
+var ErrPassword = i18n.Error("el PDF pide contraseña para abrirse")
 
 // padding es la cadena de relleno del Algorithm 2 (32 bytes fijos del estándar).
 var padding = []byte{
@@ -61,10 +61,10 @@ func (d *Document) setupEncryption(passwords []string) error {
 	encRef := d.trailer[Name("Encrypt")]
 	enc, err := d.resolveDict(encRef)
 	if err != nil || enc == nil {
-		return fmt.Errorf("el /Encrypt no se puede leer")
+		return i18n.Errorf("el /Encrypt no se puede leer")
 	}
 	if f := enc.GetName("Filter"); f != "Standard" {
-		return fmt.Errorf("cifrado %q no soportado (solo el estándar con contraseña)", f)
+		return i18n.Errorf("cifrado %q no soportado (solo el estándar con contraseña)", f)
 	}
 	h := &securityHandler{encryptMeta: true}
 	if r, ok := encRef.(Ref); ok {
@@ -179,7 +179,7 @@ func (h *securityHandler) methods(enc Dict, v int) error {
 		h.stmMethod, h.strMethod = pick("StmF"), pick("StrF")
 		return nil
 	}
-	return fmt.Errorf("versión de cifrado /V %d no soportada", v)
+	return i18n.Errorf("versión de cifrado /V %d no soportada", v)
 }
 
 func (d *Document) firstID() []byte {

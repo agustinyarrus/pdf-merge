@@ -1,5 +1,7 @@
 package pdf
 
+import "github.com/agustinyarrus/pdf-merge/internal/i18n"
+
 // outline.go arma los marcadores (outline) del documento combinado:
 //   - un marcador por archivo de entrada, que lleva a su primera página;
 //   - debajo, los marcadores originales de ese archivo, con los destinos
@@ -114,7 +116,7 @@ func pruneOutline(items []*outlineItem) []*outlineItem {
 	for _, it := range items {
 		if it.dest != nil || it.action != nil || len(it.kids) > 0 {
 			if it.title == nil {
-				it.title = String{Value: []byte("(sin título)")}
+				it.title = String{Value: []byte(i18n.T("(sin título)"))}
 			}
 			out = append(out, it)
 		}

@@ -1,6 +1,8 @@
 package pdf
 
-import "fmt"
+import (
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
+)
 
 // predictor.go deshace los predictores de PNG y TIFF que se aplican antes de
 // FlateDecode. Los xref streams casi siempre vienen con el predictor PNG "Up"
@@ -58,7 +60,7 @@ func applyPredictor(data []byte, p predictorParams) ([]byte, error) {
 	case p.predictor >= 10:
 		return pngPredictor(data, p)
 	}
-	return nil, fmt.Errorf("predictor %d no soportado", p.predictor)
+	return nil, i18n.Errorf("predictor %d no soportado", p.predictor)
 }
 
 // pngPredictor revierte los filtros de PNG (por fila, con un byte de tipo al
@@ -66,7 +68,7 @@ func applyPredictor(data []byte, p predictorParams) ([]byte, error) {
 func pngPredictor(data []byte, p predictorParams) ([]byte, error) {
 	row := p.rowBytes()
 	if row <= 0 {
-		return nil, fmt.Errorf("predictor con ancho de fila inválido")
+		return nil, i18n.Errorf("predictor con ancho de fila inválido")
 	}
 	bpp := p.bytesPerPixel()
 	stride := row + 1 // +1 por el byte de tipo de filtro
@@ -99,7 +101,7 @@ func pngPredictor(data []byte, p predictorParams) ([]byte, error) {
 			case 4: // Paeth
 				cur[i] += byte(paeth(a, b, c))
 			default:
-				return nil, fmt.Errorf("tipo de filtro PNG %d desconocido", ft)
+				return nil, i18n.Errorf("tipo de filtro PNG %d desconocido", ft)
 			}
 		}
 		out = append(out, cur...)
@@ -132,7 +134,7 @@ func abs(n int) int {
 // tiffPredictor revierte el predictor TIFF 2 (diferencia horizontal).
 func tiffPredictor(data []byte, p predictorParams) ([]byte, error) {
 	if p.bpc != 8 {
-		return nil, fmt.Errorf("predictor TIFF solo soportado con 8 bits por componente")
+		return nil, i18n.Errorf("predictor TIFF solo soportado con 8 bits por componente")
 	}
 	row := p.rowBytes()
 	bpp := p.bytesPerPixel()

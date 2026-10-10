@@ -1,6 +1,8 @@
 package pdf
 
-import "fmt"
+import (
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
+)
 
 // xrefstream.go entiende las tablas de referencias cruzadas en formato stream
 // (PDF 1.5+): un objeto con /Type /XRef cuyo contenido binario, gobernado por
@@ -15,7 +17,7 @@ func (d *Document) readXRefStream(offset int) (Dict, int, int, error) {
 	}
 	stm, ok := obj.(*Stream)
 	if !ok {
-		return nil, 0, 0, fmt.Errorf("en %d esperaba un xref stream", offset)
+		return nil, 0, 0, i18n.Errorf("en %d esperaba un xref stream", offset)
 	}
 	data, err := d.decodeStream(stm)
 	if err != nil {
@@ -23,14 +25,14 @@ func (d *Document) readXRefStream(offset int) (Dict, int, int, error) {
 	}
 	w, ok := stm.Dict[Name("W")].(Array)
 	if !ok || len(w) != 3 {
-		return nil, 0, 0, fmt.Errorf("xref stream sin /W válido")
+		return nil, 0, 0, i18n.Errorf("xref stream sin /W válido")
 	}
 	w0, _ := intValue(w[0])
 	w1, _ := intValue(w[1])
 	w2, _ := intValue(w[2])
 	rowLen := w0 + w1 + w2
 	if rowLen == 0 {
-		return nil, 0, 0, fmt.Errorf("xref stream con /W en cero")
+		return nil, 0, 0, i18n.Errorf("xref stream con /W en cero")
 	}
 
 	size, _ := intValue(stm.Dict[Name("Size")])
@@ -113,7 +115,7 @@ func (d *Document) loadObjectStream(stmNum int) (*objectStream, error) {
 	}
 	stm, ok := obj.(*Stream)
 	if !ok {
-		return nil, fmt.Errorf("objeto %d no es un object stream", stmNum)
+		return nil, i18n.Errorf("objeto %d no es un object stream", stmNum)
 	}
 	data, err := d.decodeStream(stm)
 	if err != nil {
@@ -129,7 +131,7 @@ func (d *Document) loadObjectStream(stmNum int) (*objectStream, error) {
 		num, ok1 := hs.readInt()
 		off, ok2 := hs.readInt()
 		if !ok1 || !ok2 {
-			return nil, fmt.Errorf("encabezado de object stream %d corrupto", stmNum)
+			return nil, i18n.Errorf("encabezado de object stream %d corrupto", stmNum)
 		}
 		os.offsets[num] = first + off
 		os.order = append(os.order, num)

@@ -1,6 +1,8 @@
 package pdf
 
-import "fmt"
+import (
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
+)
 
 // document.go navega la estructura lógica del PDF: del catálogo al árbol de
 // páginas, y de ahí a la lista de páginas en orden, resolviendo los atributos
@@ -46,17 +48,17 @@ func (d *Document) RootNum() int {
 func (d *Document) walkAllPages() ([]Page, error) {
 	root, err := d.resolveDict(d.trailer[Name("Root")])
 	if err != nil {
-		return nil, fmt.Errorf("no pude leer el catálogo: %w", err)
+		return nil, i18n.Errorf("no pude leer el catálogo: %w", err)
 	}
 	if root == nil {
-		return nil, fmt.Errorf("el documento no tiene catálogo")
+		return nil, i18n.Errorf("el documento no tiene catálogo")
 	}
 	pagesRoot, err := d.resolveDict(root[Name("Pages")])
 	if err != nil {
-		return nil, fmt.Errorf("no pude leer el árbol de páginas: %w", err)
+		return nil, i18n.Errorf("no pude leer el árbol de páginas: %w", err)
 	}
 	if pagesRoot == nil {
-		return nil, fmt.Errorf("el catálogo no apunta a un árbol de páginas")
+		return nil, i18n.Errorf("el catálogo no apunta a un árbol de páginas")
 	}
 	var pages []Page
 	seen := map[int]bool{}
@@ -64,7 +66,7 @@ func (d *Document) walkAllPages() ([]Page, error) {
 		return nil, err
 	}
 	if len(pages) == 0 {
-		return nil, fmt.Errorf("el documento no tiene páginas")
+		return nil, i18n.Errorf("el documento no tiene páginas")
 	}
 	return pages, nil
 }
@@ -92,7 +94,7 @@ func (d *Document) walkPages(node Dict, num int, inherited Dict, seen map[int]bo
 			if node[Name("Contents")] != nil || node.GetName("Type") == "Page" {
 				return d.appendPage(node, num, next, out)
 			}
-			return fmt.Errorf("nodo Pages sin Kids")
+			return i18n.Errorf("nodo Pages sin Kids")
 		}
 		for _, kid := range arr {
 			childNum := 0

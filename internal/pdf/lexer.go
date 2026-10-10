@@ -1,8 +1,9 @@
 package pdf
 
 import (
-	"fmt"
 	"strconv"
+
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
 )
 
 // lexer.go convierte bytes de PDF en objetos. El PDF es un formato de tokens
@@ -53,7 +54,7 @@ func (s *scanner) skipWhite() {
 func (s *scanner) parseObject() (Object, error) {
 	s.skipWhite()
 	if s.pos >= len(s.buf) {
-		return nil, fmt.Errorf("fin de datos inesperado")
+		return nil, i18n.Errorf("fin de datos inesperado")
 	}
 	c := s.buf[s.pos]
 	switch {
@@ -191,7 +192,7 @@ func (s *scanner) parseArray() (Object, error) {
 	for {
 		s.skipWhite()
 		if s.pos >= len(s.buf) {
-			return nil, fmt.Errorf("arreglo sin cierre")
+			return nil, i18n.Errorf("arreglo sin cierre")
 		}
 		if s.buf[s.pos] == ']' {
 			s.pos++
@@ -215,10 +216,10 @@ func (s *scanner) parseDict() (Object, error) {
 			break
 		}
 		if s.pos >= len(s.buf) {
-			return nil, fmt.Errorf("diccionario sin cierre")
+			return nil, i18n.Errorf("diccionario sin cierre")
 		}
 		if s.buf[s.pos] != '/' {
-			return nil, fmt.Errorf("clave de diccionario esperada en pos %d", s.pos)
+			return nil, i18n.Errorf("clave de diccionario esperada en pos %d", s.pos)
 		}
 		key, err := s.parseName()
 		if err != nil {
@@ -265,7 +266,7 @@ func (s *scanner) parseStream(d Dict) (Object, error) {
 	}
 	idx := indexEndstream(s.buf[start:])
 	if idx < 0 {
-		return nil, fmt.Errorf("stream sin endstream")
+		return nil, i18n.Errorf("stream sin endstream")
 	}
 	raw := s.buf[start : start+idx]
 	s.pos = start + idx + len("endstream")
@@ -330,7 +331,7 @@ func (s *scanner) parseKeyword() (Object, error) {
 	case "null":
 		return Null{}, nil
 	case "":
-		return nil, fmt.Errorf("token vacío en pos %d", start)
+		return nil, i18n.Errorf("token vacío en pos %d", start)
 	}
 	return Null{}, nil // palabra desconocida: tratar como null y seguir
 }

@@ -2,8 +2,9 @@ package pdf
 
 import (
 	"bytes"
-	"fmt"
 	"strconv"
+
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
 )
 
 // parser.go arma un Document a partir de los bytes de un PDF: localiza la tabla
@@ -54,7 +55,7 @@ func Parse(raw []byte) (*Document, error) { return ParseWithPasswords(raw, nil) 
 func ParseWithPasswords(raw []byte, passwords []string) (*Document, error) {
 	hdr := bytes.Index(raw[:min(len(raw), headerWindow)], []byte("%PDF-"))
 	if hdr < 0 {
-		return nil, fmt.Errorf("no parece un PDF (no hay encabezado %%PDF- en el primer KB)")
+		return nil, i18n.Errorf("no parece un PDF (no hay encabezado %%PDF- en el primer KB)")
 	}
 	// Si la basura se agregó después de escribir el PDF, los offsets cuentan
 	// desde "%PDF-": se descarta el prefijo. Si el generador los contó desde el
@@ -78,7 +79,7 @@ func ParseWithPasswords(raw []byte, passwords []string) (*Document, error) {
 		d.rebuilt = true
 		d.xref = map[int]xrefEntry{}
 		if err := d.rebuildXref(); err != nil {
-			return nil, fmt.Errorf("%v; tampoco pude reconstruir la tabla: %w", chainErr, err)
+			return nil, i18n.Errorf("%v; tampoco pude reconstruir la tabla: %w", chainErr, err)
 		}
 	}
 	// El cifrado se configura ANTES de validar el catálogo: si el catálogo vive
@@ -125,7 +126,7 @@ func (d *Document) rootLooksValid() bool {
 func lastStartXref(raw []byte) (int, error) {
 	idx := bytes.LastIndex(raw, []byte("startxref"))
 	if idx < 0 {
-		return 0, fmt.Errorf("falta startxref")
+		return 0, i18n.Errorf("falta startxref")
 	}
 	s := newScanner(raw)
 	s.pos = idx + len("startxref")
@@ -136,7 +137,7 @@ func lastStartXref(raw []byte) (int, error) {
 	}
 	n, err := strconv.Atoi(string(raw[numStart:s.pos]))
 	if err != nil {
-		return 0, fmt.Errorf("startxref sin offset")
+		return 0, i18n.Errorf("startxref sin offset")
 	}
 	return n, nil
 }
@@ -175,7 +176,7 @@ func (d *Document) readXRefChain(offset int) error {
 		offset = prev
 	}
 	if len(d.xref) == 0 {
-		return fmt.Errorf("no encontré ninguna entrada xref")
+		return i18n.Errorf("no encontré ninguna entrada xref")
 	}
 	return nil
 }
@@ -206,7 +207,7 @@ func (d *Document) readClassicXRef(s *scanner) (Dict, int, int, error) {
 			}
 			tr, ok := obj.(Dict)
 			if !ok {
-				return nil, 0, 0, fmt.Errorf("trailer no es un diccionario")
+				return nil, 0, 0, i18n.Errorf("trailer no es un diccionario")
 			}
 			prev, xrefStm := -1, -1
 			if p, ok := intValue(tr[Name("Prev")]); ok {
@@ -224,14 +225,14 @@ func (d *Document) readClassicXRef(s *scanner) (Dict, int, int, error) {
 		startObj, ok1 := s.readInt()
 		count, ok2 := s.readInt()
 		if !ok1 || !ok2 {
-			return nil, 0, 0, fmt.Errorf("sub-sección xref inválida")
+			return nil, 0, 0, i18n.Errorf("sub-sección xref inválida")
 		}
 		for i := 0; i < count; i++ {
 			off, ok1 := s.readInt()
 			_, ok2 := s.readInt() // generación
 			s.skipWhite()
 			if !ok1 || !ok2 || s.pos >= len(d.raw) {
-				return nil, 0, 0, fmt.Errorf("xref truncada en la entrada %d", startObj+i)
+				return nil, 0, 0, i18n.Errorf("xref truncada en la entrada %d", startObj+i)
 			}
 			typ := d.raw[s.pos]
 			s.pos++

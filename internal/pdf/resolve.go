@@ -5,8 +5,9 @@ import (
 	"compress/flate"
 	"compress/zlib"
 	"errors"
-	"fmt"
 	"io"
+
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
 )
 
 // resolve.go obtiene objetos por número (desde un offset del archivo o desde un
@@ -50,7 +51,7 @@ func (d *Document) loadObject(num int) (Object, error) {
 		return nil, err
 	}
 	if got != num {
-		return nil, fmt.Errorf("el xref dice que el objeto %d está en %d, pero ahí está el %d", num, entry.offset, got)
+		return nil, i18n.Errorf("el xref dice que el objeto %d está en %d, pero ahí está el %d", num, entry.offset, got)
 	}
 	// Solo los objetos DIRECTOS del archivo están cifrados; los de un object
 	// stream ya salen en claro al descifrar el stream que los contiene.
@@ -61,21 +62,21 @@ func (d *Document) loadObject(num int) (Object, error) {
 // número y la generación que encontró, y el objeto interno.
 func (d *Document) parseIndirectAt(offset int) (int, int, Object, error) {
 	if offset < 0 || offset >= len(d.raw) {
-		return 0, 0, nil, fmt.Errorf("offset %d fuera de rango", offset)
+		return 0, 0, nil, i18n.Errorf("offset %d fuera de rango", offset)
 	}
 	s := newScanner(d.raw)
 	s.pos = offset
 	num, ok := s.readInt()
 	if !ok {
-		return 0, 0, nil, fmt.Errorf("en %d no arranca un objeto indirecto", offset)
+		return 0, 0, nil, i18n.Errorf("en %d no arranca un objeto indirecto", offset)
 	}
 	gen, ok := s.readInt()
 	if !ok {
-		return 0, 0, nil, fmt.Errorf("en %d falta la generación", offset)
+		return 0, 0, nil, i18n.Errorf("en %d falta la generación", offset)
 	}
 	s.skipWhite()
 	if !s.hasPrefix("obj") {
-		return 0, 0, nil, fmt.Errorf("en %d falta 'obj'", offset)
+		return 0, 0, nil, i18n.Errorf("en %d falta 'obj'", offset)
 	}
 	s.pos += len("obj")
 	obj, err := s.parseObject()
@@ -143,7 +144,7 @@ func (d *Document) Resolve(o Object) (Object, error) {
 			return o, nil
 		}
 		if seen++; seen > 100 {
-			return nil, fmt.Errorf("cadena de referencias demasiado larga")
+			return nil, i18n.Errorf("cadena de referencias demasiado larga")
 		}
 		v, err := d.getObject(ref.Num)
 		if err != nil {
@@ -168,7 +169,7 @@ func (d *Document) resolveDict(o Object) (Dict, error) {
 	case Null:
 		return nil, nil
 	}
-	return nil, fmt.Errorf("esperaba un diccionario, vino %T", v)
+	return nil, i18n.Errorf("esperaba un diccionario, vino %T", v)
 }
 
 // decodeStream devuelve el contenido de un stream aplicando el filtro que
@@ -249,7 +250,7 @@ func applyFilter(name string, data []byte) ([]byte, error) {
 	case "", "Identity":
 		return data, nil
 	}
-	return nil, fmt.Errorf("filtro %q no soportado para xref/objstm", name)
+	return nil, i18n.Errorf("filtro %q no soportado para xref/objstm", name)
 }
 
 // inflate descomprime datos FlateDecode con la tolerancia que piden los PDF del
@@ -268,5 +269,5 @@ func inflate(data []byte) ([]byte, error) {
 	if err == nil || (len(out) > 0 && errors.Is(err, io.ErrUnexpectedEOF)) {
 		return out, nil
 	}
-	return nil, fmt.Errorf("no pude descomprimir el flujo Flate")
+	return nil, i18n.Errorf("no pude descomprimir el flujo Flate")
 }

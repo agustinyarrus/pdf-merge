@@ -1,9 +1,10 @@
 package pdf
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/agustinyarrus/pdf-merge/internal/i18n"
 )
 
 // pagerange.go interpreta selecciones de páginas al estilo de una impresora:
@@ -61,7 +62,7 @@ func ParsePageRange(spec string) (*PageRange, error) {
 		pr.segs = append(pr.segs, seg)
 	}
 	if len(pr.segs) == 0 {
-		return nil, fmt.Errorf("selección de páginas vacía: %q", spec)
+		return nil, i18n.Errorf("selección de páginas vacía: %q", spec)
 	}
 	return pr, nil
 }
@@ -73,14 +74,14 @@ func parseSegment(part string) (segment, error) {
 		if strings.TrimSpace(lo) != "" {
 			v, err := strconv.Atoi(strings.TrimSpace(lo))
 			if err != nil || v < 1 {
-				return segment{}, fmt.Errorf("página inicial inválida en %q", part)
+				return segment{}, i18n.Errorf("página inicial inválida en %q", part)
 			}
 			from = v
 		}
 		if strings.TrimSpace(hi) != "" {
 			v, err := strconv.Atoi(strings.TrimSpace(hi))
 			if err != nil || v < 1 {
-				return segment{}, fmt.Errorf("página final inválida en %q", part)
+				return segment{}, i18n.Errorf("página final inválida en %q", part)
 			}
 			to = v
 		}
@@ -88,7 +89,7 @@ func parseSegment(part string) (segment, error) {
 	}
 	v, err := strconv.Atoi(part)
 	if err != nil || v < 1 {
-		return segment{}, fmt.Errorf("número de página inválido: %q", part)
+		return segment{}, i18n.Errorf("número de página inválido: %q", part)
 	}
 	return segment{from: v, to: v}, nil
 }
@@ -104,7 +105,7 @@ func (pr *PageRange) Select(all []Page) ([]Page, error) {
 		}
 		from := seg.from
 		if from > n {
-			return nil, fmt.Errorf("la página %d no existe (el archivo tiene %d)", from, n)
+			return nil, i18n.Errorf("la página %d no existe (el archivo tiene %d)", from, n)
 		}
 		idxs := make([]int, 0, to-from+1)
 		for i := from; i <= to; i++ {
