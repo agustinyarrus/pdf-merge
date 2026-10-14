@@ -1,3 +1,5 @@
+<p align="right"><sub><a href="ARQUITECTURA.en.md">English</a> · <b>Español</b></sub></p>
+
 # Arquitectura
 
 ## Principios

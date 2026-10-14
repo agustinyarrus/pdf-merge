@@ -1,3 +1,5 @@
+<p align="right"><sub><a href="PENDIENTE.en.md">English</a> · <b>Español</b></sub></p>
+
 # Pendiente
 
 pdf-merge está terminada y verificada ([VERIFICACION.md](VERIFICACION.md)). Lo que sigue son mejoras, en el orden en que conviene hacerlas.

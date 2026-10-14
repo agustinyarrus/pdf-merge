@@ -1,3 +1,5 @@
+<p align="right"><sub><a href="release-v1.0.0.en.md">English</a> · <b>Español</b></sub></p>
+
 # pdf-merge 1.0.0
 
 La primera versión de pdf-merge como proyecto propio. Antes vivía en navaja, la suite de herramientas de consola para Windows; el código es el que se probó ahí (más tres cambios de presentación, cada uno con su prueba: la cabecera dice la versión con su `v`; los errores y los avisos que no entran en la ventana se parten en palabras en vez de cortarse donde caen; y si lo fusionado son solo objetos sin stream, la tarjeta dice los objetos y no "−0 B"), ahora con su repo, su número de versión, su CI y su demo.

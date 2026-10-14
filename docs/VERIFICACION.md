@@ -1,3 +1,5 @@
+<p align="right"><sub><a href="VERIFICACION.en.md">English</a> · <b>Español</b></sub></p>
+
 # Verificación
 
 La regla: pdf-merge se contrasta con algo **independiente**. Un parser que lee lo que escribió su propio escritor no prueba nada; qpdf, pypdf y PDFium sí.
